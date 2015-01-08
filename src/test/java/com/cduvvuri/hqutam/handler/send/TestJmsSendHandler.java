@@ -9,6 +9,9 @@ import org.junit.Test;
 import com.cduvvuri.hqutam.handler.send.impl.JmsSendHandlerImpl;
 import com.cduvvuri.hqutam.vo.PublishForm;
 
+/*
+chaitanya
+*/
 public class TestJmsSendHandler {
 	
 	@Test
