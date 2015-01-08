@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html data-ng-app = "root-module">
+<head>
+<script type="text/javascript" src="js/angular.min-1.2.16.js"></script>
+<script type="text/javascript" src="js/angular-route.js"></script>
+</head>
+
+<!-- data-ng-init="names=['chaitanya','sudha','duvvuri','chaitu']" -->
+<body>
+	
+<!-- 	<input type="text" data-ng-model="fname" />{{fname}}
+
+	<ul data-ng-repeat="name in names | filter:fname | orderBy:'fname'">
+		<li>{{name | uppercase}}</li>
+	</ul>
+
+	<select>
+		<option data-ng-repeat="name in names | filter:fname">{{name}}</option>
+	</select>
+ -->
+
+	<!-- <div data-ng-controller="SimpleController">
+		<ul data-ng-repeat="cust in customers">
+			<li>{{cust.name | uppercase}}</li>
+		</ul>
+
+		<input type="text">{{testName}}
+
+	</div>-->
+
+	<div>
+		<div data-ng-view>
+			<ng-view></ng-view>
+		</div>
+	</div>
+
+
+	<script>
+			var rootModule = angular.module('root-module',['ngRoute']);
+						
+			//alert('hello1');
+			
+			rootModule.config(function($routeProvider) {
+				$routeProvider.when('/', 
+						{ controller: 'SimpleController', 
+							templateUrl: 'view1.html'}
+					).otherwise({redirectTo: '/'})
+			});			
+
+			//alert('hello2');
+			
+			
+			rootModule.controller('SimpleController',function ($scope) {
+				$scope.customers = [{name:'Chaitanya',city:'kakinada'},
+				                    {name:'Sudha',city:'bengaluru'}
+				    				];
+				$scope.testName = 'HEY';
+			});
+
+			//alert('hello3');
+			
+		</script>
+
+</body>
+</html>

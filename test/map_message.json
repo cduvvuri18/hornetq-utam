@@ -1,0 +1,12 @@
+[
+	{
+		"key":"key1", 
+		"type":"INTEGER",
+		"value":"15"
+	},
+	{	
+		"key":"key2", 
+		"type":"BYTE_ARRAY",
+		"value":"E:/Booked Car Parking List.pdf"
+	}
+]

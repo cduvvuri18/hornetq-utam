@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="ui.hornetq">
+<head>
+<meta charset="utf-8">
+<title>AngularJS ui-select</title>
+
+<!--
+    IE8 support, see AngularJS Internet Explorer Compatibility http://docs.angularjs.org/guide/ie
+    For Firefox 3.6, you will also need to include jQuery and ECMAScript 5 shim
+  -->
+<!--[if lt IE 9]>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/es5-shim/2.2.0/es5-shim.js"></script>
+    <script>
+      document.createElement('ui-select');
+      document.createElement('ui-select-match');
+      document.createElement('ui-select-choices');
+    </script>
+  <![endif]-->
+
+<script src="js/angular-1.2.18/angular.js"></script>
+<script src="js/angular-1.2.18/angular-sanitize.js"></script>
+<script src="js/angular-1.2.18/angular-route.js"></script>
+<script src="js/jquery/jquery-2.1.1.js"></script>
+<script src="js/angular-1.2.18/ng-upload.js"></script>
+
+<!-- bootstrap files -->
+<script src="js/angular-1.2.18/ui-bootstrap-tpls-0.11.2.min.js"></script>
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="css/bootstrap-theme.css">
+
+<!-- ui-select files -->
+<script src="js/angular-1.2.18/select.js"></script>
+<link rel="stylesheet" href="css/select.css">
+
+<!-- Select2 theme -->
+<link rel="stylesheet" href="css/select2.css">
+<link rel="stylesheet" href="css/selectize.default.css">
+
+<!-- utam ui -->
+<script src="js/controller.js"></script>
+<script src="js/router.js"></script>
+<script src="js/service.js"></script>
+<script src="js/administration-controller.js"></script>
+<script src="js/configuration-controller.js"></script>
+<script src="js/monitor-controller.js"></script>
+<script src="js/unittesting-controller.js"></script>
+
+<style>
+body {
+	padding: 15px;
+}
+
+.select2>.select2-choice.ui-select-match {
+	/* Because of the inclusion of Bootstrap */
+	height: 29px;
+}
+
+.selectize-control>.selectize-dropdown {
+	top: 36px;
+}
+
+.starter-template {
+	padding: 40px 15px;
+}
+</style>
+</head>
+<body>
+
+	<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<a class="navbar-brand" href="#">HornetQ-UTAM</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="container starter-template">
+		<div ng-view></div>
+	</div>
+</body>
+</html>
+
