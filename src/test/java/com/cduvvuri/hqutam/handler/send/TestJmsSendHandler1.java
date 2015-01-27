@@ -66,8 +66,6 @@ public class TestJmsSendHandler1 {
         mapper.acceptJsonFormatVisitor(mapper.constructType(SampleDto.class), visitor);
         com.fasterxml.jackson.module.jsonSchema.JsonSchema schema = visitor.finalSchema();
         
-        
-        
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema));
 	}
 }

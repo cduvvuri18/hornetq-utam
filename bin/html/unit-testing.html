@@ -1,0 +1,159 @@
+<div class="row">
+	<div class="col-lg-6">
+		<div class="well">
+			<form role="form" ng-upload="uploadComplete(content)" action="/hqutam/rs/pub">
+				<div class="form-group">
+					<label for="hornetQType">HornetQ Module</label> <input type="text"
+						class="form-control" id="hq_type" name="hqType"
+						ng-model="publish_form.hqType" ng-readonly="true">
+				</div>
+				<!-- =============================Destination Type================================= -->
+				<div class="form-group">
+					<label for="destinationTypes">Destination Type</label> <p> <label
+						class="radio-inline"> <input type="radio"
+						name="destinationType" id="destinationTypeQ" value="Q"
+						ng-model="publish_form.destinationType" ng-change="onDestinationTypeSelected()"/> Queue
+					</label> <label class="radio-inline"> <input type="radio"
+						name="destinationType" id="destinationTypeT" value="T"
+						ng-model="publish_form.destinationType" ng-change="onDestinationTypeSelected()" ng-disabled="true"/> Topic
+						</label></p>
+				</div>
+				<!-- =============================Destination Name================================= -->
+				<div class="form-group">
+					<label for="destinationName">Destination Name</label>
+					<ui-select ng-model="destinationss" theme="selectize"
+						ng-disabled="disabled" style="width: 300px;"
+						on-select="onDestinationSelected($item)"> <ui-select-match
+						placeholder="Select or search a destination in the list...">{{$select.selected}}</ui-select-match>
+					<ui-select-choices
+						repeat="destination in destinations | filter: $select.search">
+					<span ng-bind-html="destination | highlight: $select.search"></span>
+					<!-- <small ng-bind-html="destination.jndiName | highlight: $select.search"></small> -->
+					</ui-select-choices> </ui-select>
+					<p>
+						JNDI Name:
+						<highlight>
+						{{publish_form.destinationJndiName}}</highlight>
+					</p> 
+				</div>
+				<!-- =============================Message Type================================= -->
+				<div class="form-group">
+					<label for="messageTypeName">Message Type</label>
+					<ui-select ng-model="publish_form.messageType" theme="selectize"
+						ng-disabled="disabled" style="width: 300px;"
+						on-select="onMessageTypeSelected($item)"> <ui-select-match
+						placeholder="Select or search a message type in the list..."
+						>{{$select.selected}}</ui-select-match>
+					<ui-select-choices
+						repeat="type in message_types | filter: $select.search">
+					<span ng-bind-html="type | highlight: $select.search"></span> </ui-select-choices> </ui-select>
+				</div>
+				<!-- =============================Message Input Type, Display only when it is TextMessage================================= -->
+				<div class="form-group" ng-show="display_messageInputType">
+					<label for="messageInputTypes">Choose Message Input Type</label><p> <label
+						class="radio-inline"> <input type="radio"
+						name="messageInputType" id="inlineRadio1" value="TEXT"
+						ng-model="publish_form.messageInputType" ng-change="onChooseTextMessageInputType()"> Enter Message
+					</label>
+					<label class="radio-inline"> <input type="radio"
+						name="messageInputType" id="inlineRadio3" value="FILE"
+						ng-model="publish_form.messageInputType" ng-change="onChooseTextMessageInputType()"> Upload Message
+					</label></p>
+				</div>
+				
+				<!-- ======================Fully qualified class name, display only when ObjectMessage is selected========================== -->
+				<div class="form-group" ng-show="display_fullyQualClassName">
+					<label for="hornetQType">Fully Qualified Class Name</label> 
+					<input type="text" class="form-control" name="fullyQualClassName" ng-model="publish_form.fullyQualClassName"/>
+				</div>
+				
+				<!-- ======================Enter Message, display only when TextMessage is selected========================== -->
+				<div class="form-group" ng-show="display_enterMessage">
+					<label for="messageTextArea">Enter Message</label>
+					<TextArea type="text" name="messageByTextarea"
+						id="messageByTextarea" placeholder="Hello World"
+						class="form-control" ng-model="publish_form.messageByTextarea"></TextArea>
+					<p class="help-block">
+						<small>preferred if your message is simple and short.</small>
+					</p>
+				</div>
+				
+				<!-- ======================Upload Message========================== -->
+				<div class="form-group" ng-show="display_uploadMessage">
+					<label for="messageLocalFile">Upload Message</label> <input
+						type="file" name="messageInBytes" id="messageInLocalFile"></input>
+					<!-- <p class="help-block">
+						<small>preferred, if your message is big enough.</small>
+					</p> -->
+				</div>
+
+				<!-- ======================Upload Message Properties========================== -->
+				<div class="form-group">
+					<label for="messagePropertiesLocalFile">Upload Message Properties</label> <input
+						type="file" name="messagePropertiesInBytes" id="messagePropertiesInLocalFile"></input>
+					<!-- <p class="help-block">
+						<small>preferred, if your message is big enough.</small>
+					</p> -->
+				</div>
+				
+				<input type="text" name="messageType" ng-model="publish_form.messageType" ng-hide="true"/>
+				<input type="text" name="destinationJndiName" ng-model="publish_form.destinationJndiName" ng-hide="true"/>
+				<input type="text" name="destinationName" ng-model="publish_form.destinationName" ng-hide="true"/>
+				 
+				<button type="submit" class="btn btn-default">Submit</button>
+			</form>
+		</div>
+	</div>
+	<div class="col-lg-6" ng-show="display_destination_info" ng-hide="true">
+		<legend>Destination Information</legend>
+		<!-- <div class="form-group">
+			<label for="destinationName">Destinations</label>
+			<ui-select ng-model="publish_form.destination" theme="selectize"
+				ng-disabled="disabled" style="width: 300px;"
+				on-select="onDestinationSelected($item)"> <ui-select-match
+				placeholder="Select or search a destination in the list...">{{$select.selected.name}}</ui-select-match>
+			<ui-select-choices
+				repeat="destination in destinations | filter: $select.search">
+			<span ng-bind-html="destination.name | highlight: $select.search"></span>
+			</ui-select-choices> </ui-select>
+		</div> -->
+
+		<div class="well" style="font-size: 10px">
+			<div>
+				<table class="table table-bordered table-condensed">
+					<tr data-ng-repeat="(key, val) in destination_meta" class="success">
+						<td>{{key}}</td>
+						<td>{{val}}</td>
+					</tr>
+				</table>
+			</div>
+
+			<div class="form-group" data-ng-hide="true">
+				<label for="messageId">Message Info</label>
+				<ui-select ng-model="message_id_selected" theme="selectize"
+					ng-disabled="disabled" style="width: 300px;"> <ui-select-match
+					placeholder="Select or search a message id in the list...">{{$select.selected.JMSMessageID}}</ui-select-match>
+				<ui-select-choices
+					repeat="message in destination_messages | filter: $select.search">
+				<span
+					ng-bind-html="message.JMSMessageID | highlight: $select.search"></span>
+				</ui-select-choices> </ui-select>
+			</div>
+			<div>
+				<table class="table table-bordered table-condensed">
+					<tr data-ng-repeat="message in destination_messages">
+						<td>
+							<table class="table table-bordered table-condensed">
+								<tr
+									data-ng-repeat="(key, val) in message | filter:message_id_selected"
+									class="success">
+									<td>{{key}}</td>
+									<td>{{val}}</td>
+								</tr>
+							</table>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>

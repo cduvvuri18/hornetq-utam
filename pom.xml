@@ -61,6 +61,12 @@
 			<groupId>org.jboss.remotingjmx</groupId>
 			<artifactId>remoting-jmx</artifactId>
 			<version>1.1.0.Final</version>
+			<exclusions>
+				<exclusion>
+				    <groupId>org.jboss.remoting3</groupId>
+    				<artifactId>jboss-remoting</artifactId>
+				</exclusion>
+			</exclusions>			
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
@@ -68,4 +74,115 @@
 			<version>2.4.4</version>
 		</dependency>
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>standalone</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>copy-dependencies</id>
+								<phase>package</phase>
+								<goals>
+									<goal>copy-dependencies</goal>
+								</goals>
+								<configuration>
+									<excludeScope>provided</excludeScope>
+									<includeScope>runtime</includeScope>
+									<outputDirectory>
+										${basedir}/bin/lib
+									</outputDirectory>
+									<overWriteIfNewer>
+										true
+									</overWriteIfNewer>
+									<!-- excludeTransitive> true </excludeTransitive -->
+								</configuration>
+							</execution>
+							<execution>
+								<id>copy-executable-to-bin</id>
+								<phase>install</phase>
+								<goals>
+									<goal>copy</goal>
+								</goals>
+								<configuration>
+									<excludeScope>provided</excludeScope>
+									<includeScope>runtime</includeScope>
+									<artifactItems>
+										<artifactItem>
+											<groupId>
+												com.cduvvuri.hqutam
+											</groupId>
+											<artifactId>
+												hornetq-utam
+											</artifactId>
+											<version>
+												${project.version}
+											</version>
+											<type>jar</type>
+											<overWrite>true</overWrite>
+											<outputDirectory>
+												${basedir}/bin/lib
+											</outputDirectory>
+										</artifactItem>
+									</artifactItems>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jar-plugin</artifactId>
+						<version>2.2</version>
+						<configuration>
+							<archive>
+								<manifest>
+									<!-- <addClasspath>true</addClasspath> -->
+									<mainClass>
+										com.cduvvuri.hqutam.main.UtamServer
+									</mainClass>
+								</manifest>
+							</archive>
+							<finalName>hornet-utam-standard</finalName>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>copy-utam-properies</id>
+								<phase>package</phase>
+								<configuration>
+									<tasks>
+										<copy todir="${basedir}/bin" overwrite="true">
+											<fileset dir="${basedir}" includes="start.bat" />
+											<fileset dir="${basedir}" includes="utam.properties" />
+										</copy>
+										<copy todir="${basedir}/bin/html" overwrite="true">
+											<fileset dir="${basedir}/html" />
+										</copy>
+										<copy todir="${basedir}/bin/html/upload-samples" overwrite="true">
+											<fileset dir="${basedir}/upload-samples" />
+										</copy>
+										<copy todir="${basedir}/bin" overwrite="true">
+											<fileset dir="${basedir}" includes="start.bat" />
+										</copy>
+									</tasks>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

@@ -1,5 +1,6 @@
 package com.cduvvuri.hqutam.utils;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -15,9 +16,11 @@ public class PropertyUtils {
 
 	public static Properties getProps() {
 		try {
+			if(prop != null) {
+				return prop;
+			}
 			prop = new Properties();
-			prop.load(JmsServiceLocator.class.getClassLoader()
-					.getResourceAsStream("utam.properties"));
+			prop.load(new FileInputStream("utam.properties"));
 			LOGGER.info("Properties have been loaded successfully : " + prop);
 			return prop;
 		} catch (IOException e) {

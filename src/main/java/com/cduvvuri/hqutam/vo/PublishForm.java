@@ -18,6 +18,7 @@ public class PublishForm {
 	private String destinationType;
 	private String fullyQualClassName;
 	private byte[] messageInBytes;
+	private byte[] messagePropertiesInBytes;
 
 	public PublishForm() {
 	}
@@ -89,7 +90,7 @@ public class PublishForm {
 		return messageInBytes;
 	}
 
-	@FormParam("uploadedFile")
+	@FormParam("messageInBytes")
 	@PartType("application/octet-stream")
 	public void setMessageInBytes(byte[] messageInBytes) {
 		this.messageInBytes = messageInBytes;
@@ -102,6 +103,16 @@ public class PublishForm {
 	@FormParam("fullyQualClassName")
 	public void setFullyQualClassName(String fullyQualClassName) {
 		this.fullyQualClassName = fullyQualClassName;
+	}
+
+	public byte[] getMessagePropertiesInBytes() {
+		return messagePropertiesInBytes;
+	}
+
+	@FormParam("messagePropertiesInBytes")
+	@PartType("application/octet-stream")
+	public void setMessagePropertiesInBytes(byte[] messagePropertiesInBytes) {
+		this.messagePropertiesInBytes = messagePropertiesInBytes;
 	}
 
 	@Override

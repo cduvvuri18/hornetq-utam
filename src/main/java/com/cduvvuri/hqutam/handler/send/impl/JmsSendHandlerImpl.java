@@ -10,15 +10,14 @@ import java.util.List;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
+import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.StreamMessage;
-import javax.jms.TextMessage;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,6 +29,7 @@ import com.cduvvuri.hqutam.utils.FormUtils;
 import com.cduvvuri.hqutam.utils.JsonUtils;
 import com.cduvvuri.hqutam.utils.StringUtils;
 import com.cduvvuri.hqutam.vo.MessageInfo;
+import com.cduvvuri.hqutam.vo.MessagePropertyInfo;
 import com.cduvvuri.hqutam.vo.PublishForm;
 
 public class JmsSendHandlerImpl implements SendHandler {
@@ -37,63 +37,121 @@ public class JmsSendHandlerImpl implements SendHandler {
 			.getLog(JmsSendHandlerImpl.class.getName());
 
 	public boolean send(PublishForm form) {
-		ConnectionFactory cf = null;
 		Connection connection = null;
+		Session session = null;
 		try {
-			cf = JmsServiceLocator.getConnectionFactory();
 			Destination dest = JmsServiceLocator.getDestination(StringUtils
 					.getJndiName(form.getDestinationJndiName()));
 			LOGGER.info("destinatation looked up seccessfully " + dest);
-			connection = cf.createConnection();
+			connection = JmsServiceLocator.getConnection();
 			LOGGER.info("connection created successfully " + connection);
-			Session session = connection.createSession(false,
+			session = connection.createSession(true,
 					Session.AUTO_ACKNOWLEDGE);
 			MessageProducer publisher = session.createProducer(dest);
-			connection.start();
-
+			Message message = null;
 			switch (MessageType.getType(form.getMessageType())) {
 			case TEXT_MESSAGE:
-				TextMessage txtMessage = session.createTextMessage(FormUtils.getTextMessage(form
-						));
-				publisher.send(txtMessage);
+				message = session.createTextMessage(FormUtils
+						.getTextMessage(form));
 				break;
 			case MAP_MESSAGE:
 				MapMessage mapMessage = session.createMapMessage();
-				Collection<MessageInfo> info = JsonUtils.convertJSON(
-						form.getMessageInBytes(), List.class,
-						MessageInfo.class);
+				Collection<MessageInfo> info = JsonUtils
+						.convertJSON(form.getMessageInBytes(), List.class,
+								MessageInfo.class);
 				fillMapMessage(mapMessage, info);
-				publisher.send(mapMessage);
+				message = mapMessage;
 				break;
 			case STREAM_MESSAGE:
 				StreamMessage streamMessage = session.createStreamMessage();
 				info = JsonUtils.convertJSON(form.getMessageInBytes(),
 						List.class, MessageInfo.class);
 				fillStreamMessage(streamMessage, info);
-				publisher.send(streamMessage);
+				message = streamMessage;
 				break;
 			case BYTES_MESSAGE:
 				BytesMessage bytesMessage = session.createBytesMessage();
 				info = JsonUtils.convertJSON(form.getMessageInBytes(),
 						List.class, MessageInfo.class);
 				fillBytesMessage(bytesMessage, info);
-				publisher.send(bytesMessage);
+				message = bytesMessage;
 				break;
 			case OBJECT_MESSAGE:
 				ObjectMessage objMessage = session.createObjectMessage();
-				objMessage.setObject((Serializable)JsonUtils.convertJSON(form.getMessageInBytes(),
-						Class.forName(form.getFullyQualClassName()))); 
-				publisher.send(objMessage);
+				objMessage.setObject((Serializable) JsonUtils.convertJSON(
+						form.getMessageInBytes(),
+						Class.forName(form.getFullyQualClassName())));
+				message = objMessage;
 				break;
 			default:
 				break;
 			}
+			if (form.getMessagePropertiesInBytes() != null && form.getMessagePropertiesInBytes().length != 0) {
+				LOGGER.debug("message properties :: "+form.getMessagePropertiesInBytes());
+				Collection<MessagePropertyInfo> propertyInfos = JsonUtils
+						.convertJSON(form.getMessagePropertiesInBytes(),
+								List.class, MessagePropertyInfo.class);
+				fillMessageProperties(message, propertyInfos);
+			}
+			publisher.send(message);
+			session.commit();
 			return true;
 		} catch (Exception e) {
 			LOGGER.error("Failed to send Message", e);
+			try {
+				session.rollback();
+			} catch (JMSException e1) {
+				LOGGER.error("Failed to close session", e);
+			}
 			throw new RuntimeException("Failed to send Message", e);
 		} finally {
-			closeConnection(connection);
+			try {
+				session.close();
+			} catch (JMSException e) {
+				LOGGER.error("Failed to close session", e);
+			}
+		}
+	}
+
+	private void fillMessageProperties(Message message,
+			Collection<MessagePropertyInfo> propertyInfos)
+			throws NumberFormatException, JMSException {
+		for (Iterator<MessagePropertyInfo> iterator = propertyInfos.iterator(); iterator
+				.hasNext();) {
+			MessagePropertyInfo propertyInfo = iterator.next();
+			switch (propertyInfo.getType()) {
+			case INTEGER:
+				message.setIntProperty(propertyInfo.getKey(),
+						Integer.valueOf(propertyInfo.getValue()));
+				break;
+			case BYTE:
+				message.setByteProperty(propertyInfo.getKey(),
+						Byte.valueOf(propertyInfo.getValue()));
+				break;
+			case LONG:
+				message.setLongProperty(propertyInfo.getKey(),
+						Long.valueOf(propertyInfo.getValue()));
+				break;
+			case BOOLEAN:
+				message.setBooleanProperty(propertyInfo.getKey(),
+						Boolean.valueOf(propertyInfo.getValue()));
+				break;
+			case FLOAT:
+				message.setFloatProperty(propertyInfo.getKey(),
+						Float.valueOf(propertyInfo.getValue()));
+				break;
+			case DOUBLE:
+				message.setDoubleProperty(propertyInfo.getKey(),
+						Double.valueOf(propertyInfo.getValue()));
+				break;
+			case SHORT:
+				message.setShortProperty(propertyInfo.getKey(),
+						Short.valueOf(propertyInfo.getValue()));
+				break;
+			case STRING:
+				message.setStringProperty(propertyInfo.getKey(),
+						propertyInfo.getValue());
+			}
 		}
 	}
 
@@ -102,40 +160,37 @@ public class JmsSendHandlerImpl implements SendHandler {
 			JMSException, IOException {
 		for (Iterator<MessageInfo> iterator = info.iterator(); iterator
 				.hasNext();) {
-			MessageInfo mapMessageInfo = iterator.next();
-			switch (mapMessageInfo.getType()) {
+			MessageInfo messageInfo = iterator.next();
+			switch (messageInfo.getType()) {
 			case INTEGER:
-				bytesMessage
-						.writeInt(Integer.valueOf(mapMessageInfo.getValue()));
+				bytesMessage.writeInt(Integer.valueOf(messageInfo.getValue()));
 				break;
 			case BYTE:
-				bytesMessage.writeByte(Byte.valueOf(mapMessageInfo.getValue()));
+				bytesMessage.writeByte(Byte.valueOf(messageInfo.getValue()));
 				break;
 			case LONG:
-				bytesMessage.writeLong(Long.valueOf(mapMessageInfo.getValue()));
-
+				bytesMessage.writeLong(Long.valueOf(messageInfo.getValue()));
+				break;
 			case BOOLEAN:
-				bytesMessage.writeBoolean(Boolean.valueOf(mapMessageInfo
+				bytesMessage.writeBoolean(Boolean.valueOf(messageInfo
 						.getValue()));
-
+				break;
 			case FLOAT:
-				bytesMessage
-						.writeFloat(Float.valueOf(mapMessageInfo.getValue()));
-
+				bytesMessage.writeFloat(Float.valueOf(messageInfo.getValue()));
+				break;
 			case DOUBLE:
-				bytesMessage.writeDouble(Double.valueOf(mapMessageInfo
-						.getValue()));
-
-			case SHORT:
 				bytesMessage
-						.writeShort(Short.valueOf(mapMessageInfo.getValue()));
-
+						.writeDouble(Double.valueOf(messageInfo.getValue()));
+				break;
+			case SHORT:
+				bytesMessage.writeShort(Short.valueOf(messageInfo.getValue()));
+				break;
 			case CHARACTER:
-				bytesMessage.writeChar(Character.valueOf(mapMessageInfo
-						.getValue().charAt(0)));
-
+				bytesMessage.writeChar(Character.valueOf(messageInfo.getValue()
+						.charAt(0)));
+				break;
 			case BYTE_ARRAY:
-				File file = new File(mapMessageInfo.getValue());
+				File file = new File(messageInfo.getValue());
 				FileInputStream fin = new FileInputStream(file);
 				byte[] fileContent = new byte[(int) file.length()];
 				try {
@@ -147,9 +202,8 @@ public class JmsSendHandlerImpl implements SendHandler {
 				break;
 
 			case STRING:
-				bytesMessage.writeUTF(mapMessageInfo.getValue());
+				bytesMessage.writeUTF(messageInfo.getValue());
 				break;
-
 			}
 
 		}
@@ -161,42 +215,37 @@ public class JmsSendHandlerImpl implements SendHandler {
 			JMSException, IOException {
 		for (Iterator<MessageInfo> iterator = info.iterator(); iterator
 				.hasNext();) {
-			MessageInfo mapMessageInfo = iterator.next();
-			switch (mapMessageInfo.getType()) {
+			MessageInfo messageInfo = iterator.next();
+			switch (messageInfo.getType()) {
 			case INTEGER:
-				streamMessage.writeInt(Integer.valueOf(mapMessageInfo
-						.getValue()));
+				streamMessage.writeInt(Integer.valueOf(messageInfo.getValue()));
 				break;
 			case BYTE:
-				streamMessage
-						.writeByte(Byte.valueOf(mapMessageInfo.getValue()));
+				streamMessage.writeByte(Byte.valueOf(messageInfo.getValue()));
 				break;
 			case LONG:
-				streamMessage
-						.writeLong(Long.valueOf(mapMessageInfo.getValue()));
-
+				streamMessage.writeLong(Long.valueOf(messageInfo.getValue()));
+				break;
 			case BOOLEAN:
-				streamMessage.writeBoolean(Boolean.valueOf(mapMessageInfo
+				streamMessage.writeBoolean(Boolean.valueOf(messageInfo
 						.getValue()));
-
+				break;
 			case FLOAT:
-				streamMessage.writeFloat(Float.valueOf(mapMessageInfo
-						.getValue()));
-
+				streamMessage.writeFloat(Float.valueOf(messageInfo.getValue()));
+				break;
 			case DOUBLE:
-				streamMessage.writeDouble(Double.valueOf(mapMessageInfo
-						.getValue()));
-
+				streamMessage
+						.writeDouble(Double.valueOf(messageInfo.getValue()));
+				break;
 			case SHORT:
-				streamMessage.writeShort(Short.valueOf(mapMessageInfo
-						.getValue()));
-
+				streamMessage.writeShort(Short.valueOf(messageInfo.getValue()));
+				break;
 			case CHARACTER:
-				streamMessage.writeChar(Character.valueOf(mapMessageInfo
+				streamMessage.writeChar(Character.valueOf(messageInfo
 						.getValue().charAt(0)));
-
+				break;
 			case BYTE_ARRAY:
-				File file = new File(mapMessageInfo.getValue());
+				File file = new File(messageInfo.getValue());
 				FileInputStream fin = new FileInputStream(file);
 				byte[] fileContent = new byte[(int) file.length()];
 				try {
@@ -208,7 +257,7 @@ public class JmsSendHandlerImpl implements SendHandler {
 				break;
 
 			case STRING:
-				streamMessage.writeString(mapMessageInfo.getValue());
+				streamMessage.writeString(messageInfo.getValue());
 				break;
 
 			}
@@ -222,42 +271,42 @@ public class JmsSendHandlerImpl implements SendHandler {
 			JMSException, IOException {
 		for (Iterator<MessageInfo> iterator = info.iterator(); iterator
 				.hasNext();) {
-			MessageInfo mapMessageInfo = iterator.next();
-			switch (mapMessageInfo.getType()) {
+			MessageInfo messageInfo = iterator.next();
+			switch (messageInfo.getType()) {
 			case INTEGER:
-				mapMessage.setInt(mapMessageInfo.getKey(),
-						Integer.valueOf(mapMessageInfo.getValue()));
+				mapMessage.setInt(messageInfo.getKey(),
+						Integer.valueOf(messageInfo.getValue()));
 				break;
 			case BYTE:
-				mapMessage.setByte(mapMessageInfo.getKey(),
-						Byte.valueOf(mapMessageInfo.getValue()));
+				mapMessage.setByte(messageInfo.getKey(),
+						Byte.valueOf(messageInfo.getValue()));
 				break;
 			case LONG:
-				mapMessage.setLong(mapMessageInfo.getKey(),
-						Long.valueOf(mapMessageInfo.getValue()));
-
+				mapMessage.setLong(messageInfo.getKey(),
+						Long.valueOf(messageInfo.getValue()));
+				break;
 			case BOOLEAN:
-				mapMessage.setBoolean(mapMessageInfo.getKey(),
-						Boolean.valueOf(mapMessageInfo.getValue()));
-
+				mapMessage.setBoolean(messageInfo.getKey(),
+						Boolean.valueOf(messageInfo.getValue()));
+				break;
 			case FLOAT:
-				mapMessage.setFloat(mapMessageInfo.getKey(),
-						Float.valueOf(mapMessageInfo.getValue()));
-
+				mapMessage.setFloat(messageInfo.getKey(),
+						Float.valueOf(messageInfo.getValue()));
+				break;
 			case DOUBLE:
-				mapMessage.setDouble(mapMessageInfo.getKey(),
-						Double.valueOf(mapMessageInfo.getValue()));
-
+				mapMessage.setDouble(messageInfo.getKey(),
+						Double.valueOf(messageInfo.getValue()));
+				break;
 			case SHORT:
-				mapMessage.setShort(mapMessageInfo.getKey(),
-						Short.valueOf(mapMessageInfo.getValue()));
-
+				mapMessage.setShort(messageInfo.getKey(),
+						Short.valueOf(messageInfo.getValue()));
+				break;
 			case CHARACTER:
-				mapMessage.setChar(mapMessageInfo.getKey(),
-						Character.valueOf(mapMessageInfo.getValue().charAt(0)));
-
+				mapMessage.setChar(messageInfo.getKey(),
+						Character.valueOf(messageInfo.getValue().charAt(0)));
+				break;
 			case BYTE_ARRAY:
-				File file = new File(mapMessageInfo.getValue());
+				File file = new File(messageInfo.getValue());
 				FileInputStream fin = new FileInputStream(file);
 				byte[] fileContent = new byte[(int) file.length()];
 				try {
@@ -265,28 +314,17 @@ public class JmsSendHandlerImpl implements SendHandler {
 				} finally {
 					fin.close();
 				}
-				mapMessage.setBytes(mapMessageInfo.getKey(), fileContent);
+				mapMessage.setBytes(messageInfo.getKey(), fileContent);
 				break;
 
 			case STRING:
-				mapMessage.setString(mapMessageInfo.getKey(),
-						mapMessageInfo.getValue());
+				mapMessage.setString(messageInfo.getKey(),
+						messageInfo.getValue());
 				break;
 
 			}
 
 		}
 
-	}
-
-	private void closeConnection(Connection con) {
-		try {
-			if (con != null) {
-				con.close();
-			}
-		} catch (JMSException jmse) {
-			System.out.println("Could not close connection " + con
-					+ " exception was " + jmse);
-		}
 	}
 }

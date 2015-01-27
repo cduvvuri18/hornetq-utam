@@ -1,0 +1,1 @@
+java -cp "lib\*";hornetq-utam-1.0-SNAPSHOT.jar com.cduvvuri.hqutam.main.UtamServer

@@ -14,16 +14,23 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
+import com.cduvvuri.hqutam.locator.JmsServiceLocator;
+import com.cduvvuri.hqutam.utils.JmxUtils;
+import com.cduvvuri.hqutam.utils.JndiUtils;
+
 public class UtamServer {
 	private static final Log LOGGER = LogFactory.getLog(UtamServer.class
 			.getName());
 
+	private static Server server = null;
+	
 	public UtamServer() {
 
 	}
 
 	public static void main(String[] args) {
-		Server server = new Server(getPort());
+		checkConnections();
+		server = new Server(getPort());
 
 		ContextHandlerCollection contexts = new ContextHandlerCollection();
 		contexts.setHandlers(new Handler[] { getRsContext(),
@@ -33,11 +40,64 @@ public class UtamServer {
 
 		try {
 			server.start();
-			server.join();
+			Runtime.getRuntime().addShutdownHook(new Thread()
+	        {
+	            @Override
+	            public void run()
+	            {
+	                releaseConnections();
+	            }
+	        });
+			while(true) {
+				Thread.sleep(1000);
+			}
 		} catch (Exception e) {
 			LOGGER.error(e);
+			throw new RuntimeException(e);
 		}
 
+	}
+
+	private static void releaseConnections() {
+		try {
+			JmsServiceLocator.getConnection().close();
+		}catch(Exception e) {
+			LOGGER.error(e);
+		}
+		try {
+			JndiUtils.closeContext();
+		}catch(Exception e) {
+			LOGGER.error(e);
+		}
+		
+		try{
+			if(server == null) {
+				return;
+			}
+			server.stop();
+		}catch(Exception e) {
+			LOGGER.error(e);
+		}
+	}
+	
+	private static void checkConnections() {
+		try {
+			JndiUtils.getContext();
+			JmsServiceLocator.getConnection();
+			JmxUtils.getJMXConnector();
+		}catch(Exception e) {
+			try {
+				JndiUtils.closeContext();
+			}catch(Exception e1) {
+				
+			}
+			try {
+				JmxUtils.close();
+			}catch(Exception e1) {
+				
+			}
+			throw new RuntimeException(e);
+		}
 	}
 
 	private static final ServletContextHandler getRsContext() {

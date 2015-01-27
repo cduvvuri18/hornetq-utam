@@ -3,6 +3,7 @@ package com.cduvvuri.hqutam.vo;
 import java.io.Serializable;
 
 public class SampleDto implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private String empName;
 	private int empId;
 

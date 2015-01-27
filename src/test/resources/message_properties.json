@@ -1,0 +1,12 @@
+[
+	{
+		"key":"key1",
+		"type":"STRING",
+		"value":"property1"
+	},
+	{	
+		"key":"key2",
+		"type":"STRING",
+		"value":"property2"
+	}
+]

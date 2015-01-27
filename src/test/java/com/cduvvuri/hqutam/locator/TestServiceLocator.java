@@ -13,7 +13,7 @@ public class TestServiceLocator {
 
 	@Test
 	public void testInitiailize() {
-		LOGGER.info("connection factory :: "+JmsServiceLocator.getConnectionFactory());
-		Assert.assertNotNull(JmsServiceLocator.getConnectionFactory());
+		LOGGER.info("connection factory :: "+JmsServiceLocator.getConnection());
+		Assert.assertNotNull(JmsServiceLocator.getConnection());
 	}
 }

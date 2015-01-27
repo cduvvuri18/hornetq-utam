@@ -1,20 +1,20 @@
 package com.cduvvuri.hqutam.vo;
 
 public class MessageInfo {
-	public enum MapMessageDataType {
+	public enum MessageDataType {
 		BYTE("BYTE"), LONG("LONG"), INTEGER("INTEGER"), BOOLEAN("BOOLEAN"), SHORT("SHORT"), CHARACTER(
 				"CHARACTER"), BYTE_ARRAY("BYTE_ARRAY"), FLOAT("FLOAT"), DOUBLE("DOUBLE"), STRING("STRING");
 
 		private String dataType;
 
-		MapMessageDataType(String dataType) {
+		MessageDataType(String dataType) {
 			this.dataType = dataType;
 		}		
 	}
 
-	String key;
-	MapMessageDataType type;
-	String value;
+	private String key;
+	private MessageDataType type;
+	private String value;
 
 	public String getKey() {
 		return key;
@@ -24,11 +24,11 @@ public class MessageInfo {
 		this.key = key;
 	}
 
-	public MapMessageDataType getType() {
+	public MessageDataType getType() {
 		return type;
 	}
 
-	public void setType(MapMessageDataType type) {
+	public void setType(MessageDataType type) {
 		this.type = type;
 	}
 

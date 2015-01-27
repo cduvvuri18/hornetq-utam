@@ -1,8 +1,6 @@
 package com.cduvvuri.hqutam.locator;
 
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 
 import javax.management.MBeanAttributeInfo;
@@ -11,13 +9,11 @@ import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 
 import org.hornetq.api.core.management.ObjectNameBuilder;
 import org.hornetq.api.jms.management.JMSServerControl;
 
-import com.cduvvuri.hqutam.utils.PropertyUtils;
+import com.cduvvuri.hqutam.utils.JmxUtils;
 
 public class JmxJmsMbeanLocator {
 	private static final String QUEUE_LIST_MESSAGES_AS_JSON = "listMessagesAsJSON";
@@ -26,7 +22,7 @@ public class JmxJmsMbeanLocator {
 	private static final String TOPIC_LIST_ALL_SUBSCRIPTIONS_AS_JSON = "listAllSubscriptionsAsJSON";
 
 	public static String[] getQueueNames() {
-		JMXConnector connector = getJMXConnector();
+		JMXConnector connector = JmxUtils.getJMXConnector();
 		try {
 			ObjectName on = ObjectNameBuilder.DEFAULT.getJMSServerObjectName();
 			MBeanServerConnection mbsc = connector.getMBeanServerConnection();
@@ -36,12 +32,12 @@ public class JmxJmsMbeanLocator {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			closeConnection(connector);
+			JmxUtils.closeConnection(connector);
 		}
 	}
 
 	public static String[] getTopicNames() {
-		JMXConnector connector = getJMXConnector();
+		JMXConnector connector = JmxUtils.getJMXConnector();
 		try {
 			ObjectName on = ObjectNameBuilder.DEFAULT.getJMSServerObjectName();
 			MBeanServerConnection mbsc = connector.getMBeanServerConnection();
@@ -51,13 +47,13 @@ public class JmxJmsMbeanLocator {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			closeConnection(connector);
+			JmxUtils.closeConnection(connector);
 		}
 	}
 
 	public static Map<String, Object> getQueueAttr(String name) {
 		Map<String, Object> attr = new HashMap<String, Object>();
-		JMXConnector connector = getJMXConnector();
+		JMXConnector connector = JmxUtils.getJMXConnector();
 		try {
 			ObjectName on = ObjectNameBuilder.DEFAULT
 					.getJMSQueueObjectName(name);
@@ -71,13 +67,13 @@ public class JmxJmsMbeanLocator {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			closeConnection(connector);
+			JmxUtils.closeConnection(connector);
 		}
 	}
 
 	public static Map<String, Object> getTpoicAttr(String name) {
 		Map<String, Object> attr = new HashMap<String, Object>();
-		JMXConnector connector = getJMXConnector();
+		JMXConnector connector = JmxUtils.getJMXConnector();
 		try {
 			ObjectName on = ObjectNameBuilder.DEFAULT
 					.getJMSTopicObjectName(name);
@@ -91,12 +87,12 @@ public class JmxJmsMbeanLocator {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			closeConnection(connector);
+			JmxUtils.closeConnection(connector);
 		}
 	}
 
 	public static String getQueueMessages(String name, String filter) {
-		JMXConnector connector = getJMXConnector();
+		JMXConnector connector = JmxUtils.getJMXConnector();
 		try {
 			ObjectName on = ObjectNameBuilder.DEFAULT
 					.getJMSQueueObjectName(name);
@@ -107,12 +103,12 @@ public class JmxJmsMbeanLocator {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			closeConnection(connector);
+			JmxUtils.closeConnection(connector);
 		}
 	}
 
 	public static String getQueueConsumers(String name) {
-		JMXConnector connector = getJMXConnector();
+		JMXConnector connector = JmxUtils.getJMXConnector();
 		try {
 			ObjectName on = ObjectNameBuilder.DEFAULT
 					.getJMSQueueObjectName(name);
@@ -123,12 +119,12 @@ public class JmxJmsMbeanLocator {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			closeConnection(connector);
+			JmxUtils.closeConnection(connector);
 		}
 	}
 
 	public static String getTopicMessages(String name, String filter) {
-		JMXConnector connector = getJMXConnector();
+		JMXConnector connector = JmxUtils.getJMXConnector();
 		try {
 			ObjectName on = ObjectNameBuilder.DEFAULT
 					.getJMSTopicObjectName(name);
@@ -143,12 +139,12 @@ public class JmxJmsMbeanLocator {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			closeConnection(connector);
+			JmxUtils.closeConnection(connector);
 		}
 	}
 
 	public static String getTopicSubscriptions(String name) {
-		JMXConnector connector = getJMXConnector();
+		JMXConnector connector = JmxUtils.getJMXConnector();
 		try {
 			ObjectName on = ObjectNameBuilder.DEFAULT
 					.getJMSTopicObjectName(name);
@@ -159,31 +155,9 @@ public class JmxJmsMbeanLocator {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			closeConnection(connector);
+			JmxUtils.closeConnection(connector);
 		}
 	}
 
-	private static JMXConnector getJMXConnector() {
-		JMXConnector connector = null;
-		try {
-			String JMX_URL = PropertyUtils.getProps().getProperty("jmx.url");
-			Hashtable<String, String[]> env = new Hashtable<String, String[]>();
 
-			String[] credentials = new String[] { "admin", "admin@123" };
-			env.put(JMXConnector.CREDENTIALS, credentials);
-			connector = JMXConnectorFactory.connect(new JMXServiceURL(JMX_URL),
-					env);
-			return connector;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private static void closeConnection(JMXConnector jmxConnector) {
-		try {
-			jmxConnector.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 }

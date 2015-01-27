@@ -1,0 +1,18 @@
+{
+  "map" : {
+    "ER" : [ {
+      "empId" : "1",
+      "empName" : "Chaitanya"
+    }, {
+      "empId" : "1",
+      "empName" : "Anitha"
+    } ],
+    "Her2" : [ {
+      "empId" : "1",
+      "empName" : "Chaitanya"
+    }, {
+      "empId" : "1",
+      "empName" : "Anitha"
+    } ]
+  }
+}

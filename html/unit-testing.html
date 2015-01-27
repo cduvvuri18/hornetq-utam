@@ -24,10 +24,10 @@
 					<ui-select ng-model="destinationss" theme="selectize"
 						ng-disabled="disabled" style="width: 300px;"
 						on-select="onDestinationSelected($item)"> <ui-select-match
-						placeholder="Select or search a destination in the list...">{{$select.selected.name}}</ui-select-match>
+						placeholder="Select or search a destination in the list...">{{$select.selected}}</ui-select-match>
 					<ui-select-choices
 						repeat="destination in destinations | filter: $select.search">
-					<span ng-bind-html="destination.name | highlight: $select.search"></span>
+					<span ng-bind-html="destination | highlight: $select.search"></span>
 					<!-- <small ng-bind-html="destination.jndiName | highlight: $select.search"></small> -->
 					</ui-select-choices> </ui-select>
 					<p>
@@ -47,6 +47,7 @@
 					<ui-select-choices
 						repeat="type in message_types | filter: $select.search">
 					<span ng-bind-html="type | highlight: $select.search"></span> </ui-select-choices> </ui-select>
+					<a ng-href="/html/upload-samples/{{message_type}}.json" ng-show="display_uploadMessage">Generate JSON Sample</a>
 				</div>
 				<!-- =============================Message Input Type, Display only when it is TextMessage================================= -->
 				<div class="form-group" ng-show="display_messageInputType">
@@ -65,6 +66,7 @@
 				<div class="form-group" ng-show="display_fullyQualClassName">
 					<label for="hornetQType">Fully Qualified Class Name</label> 
 					<input type="text" class="form-control" name="fullyQualClassName" ng-model="publish_form.fullyQualClassName"/>
+					<a ng-href="/html/upload-samples/{{publish_form.fullyQualClassName}}.json" ng-show="display_uploadMessage"><small>Generate JSON Sample for entered fully qualified class name</small></a>
 				</div>
 				
 				<!-- ======================Enter Message, display only when TextMessage is selected========================== -->
@@ -81,7 +83,16 @@
 				<!-- ======================Upload Message========================== -->
 				<div class="form-group" ng-show="display_uploadMessage">
 					<label for="messageLocalFile">Upload Message</label> <input
-						type="file" name="uploadedFile" id="messageInLocalFile"></input>
+						type="file" name="messageInBytes" id="messageInLocalFile"></input>
+					<!-- <p class="help-block">
+						<small>preferred, if your message is big enough.</small>
+					</p> -->
+				</div>
+
+				<!-- ======================Upload Message Properties========================== -->
+				<div class="form-group">
+					<label for="messagePropertiesLocalFile">Upload Message Properties</label> <input
+						type="file" name="messagePropertiesInBytes" id="messagePropertiesInLocalFile"></input>
 					<!-- <p class="help-block">
 						<small>preferred, if your message is big enough.</small>
 					</p> -->
@@ -95,9 +106,9 @@
 			</form>
 		</div>
 	</div>
-	<!-- <div class="col-lg-6">
+	<div class="col-lg-6" ng-show="display_destination_info" ng-hide="true">
 		<legend>Destination Information</legend>
-		<div class="form-group">
+		<!-- <div class="form-group">
 			<label for="destinationName">Destinations</label>
 			<ui-select ng-model="publish_form.destination" theme="selectize"
 				ng-disabled="disabled" style="width: 300px;"
@@ -107,7 +118,7 @@
 				repeat="destination in destinations | filter: $select.search">
 			<span ng-bind-html="destination.name | highlight: $select.search"></span>
 			</ui-select-choices> </ui-select>
-		</div>
+		</div> -->
 
 		<div class="well" style="font-size: 10px">
 			<div>
@@ -146,5 +157,5 @@
 				</table>
 			</div>
 		</div>
-	</div>-->
+	</div>
 </div>

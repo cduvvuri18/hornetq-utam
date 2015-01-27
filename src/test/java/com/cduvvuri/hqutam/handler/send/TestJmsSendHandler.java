@@ -1,22 +1,41 @@
 package com.cduvvuri.hqutam.handler.send;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-import org.junit.Ignore;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import com.cduvvuri.hqutam.handler.send.impl.JmsSendHandlerImpl;
+import com.cduvvuri.hqutam.locator.JmsServiceLocator;
+import com.cduvvuri.hqutam.utils.JndiUtils;
 import com.cduvvuri.hqutam.vo.PublishForm;
 
 /*
-chaitanya
-*/
+ chaitanya
+ */
 public class TestJmsSendHandler {
+	private static Log LOGGER = LogFactory.getLog(TestJmsSendHandler.class.getName());
+	
+	@AfterClass
+	public static void after() {
+		try {
+			JndiUtils.closeContext();
+		}catch(Exception e) {
+			LOGGER.error(e);
+		}
+		try {
+			JmsServiceLocator.getConnection().close();
+		}catch(Exception e) {
+			LOGGER.error(e);
+		}
+	}
 	
 	@Test
-	@Ignore
-	public void testTextMessageByText() {
+	//@Ignore
+	public void testTextMessageByText() throws Exception {
 		JmsSendHandlerImpl handler = new JmsSendHandlerImpl();
 
 		PublishForm form = new PublishForm();
@@ -24,12 +43,12 @@ public class TestJmsSendHandler {
 		form.setMessageType("TextMessage");
 		form.setDestinationJndiName("java:jboss/exported/queue/QueueA");
 		form.setMessageByTextarea("Hi this is Chaitanya");
-		
+		form.setMessagePropertiesInBytes(readFile("message_properties.json"));
 		handler.send(form);
 	}
 
 	@Test
-	@Ignore
+	//@Ignore
 	public void testTextMessageByFile() {
 		JmsSendHandlerImpl handler = new JmsSendHandlerImpl();
 
@@ -38,12 +57,12 @@ public class TestJmsSendHandler {
 		form.setMessageType("TextMessage");
 		form.setDestinationJndiName("java:jboss/exported/queue/QueueA");
 		form.setMessageInBytes("Hi this is Chaitanya".getBytes());
-		
+
 		handler.send(form);
 	}
-	
+
 	@Test
-	@Ignore
+	//@Ignore
 	public void testMapMessage() throws Exception {
 		JmsSendHandlerImpl handler = new JmsSendHandlerImpl();
 
@@ -51,13 +70,13 @@ public class TestJmsSendHandler {
 		form.setMessageInputType("FILE");
 		form.setMessageType("MapMessage");
 		form.setDestinationJndiName("java:jboss/exported/queue/QueueA");
-		form.setMessageInBytes(readFile("test/map_message.json"));
-		
+		form.setMessageInBytes(readFile("map_message.json"));
+
 		handler.send(form);
 	}
-	
+
 	@Test
-	@Ignore
+	//@Ignore
 	public void testStreamMessage() throws Exception {
 		JmsSendHandlerImpl handler = new JmsSendHandlerImpl();
 
@@ -65,13 +84,13 @@ public class TestJmsSendHandler {
 		form.setMessageInputType("FILE");
 		form.setMessageType("StreamMessage");
 		form.setDestinationJndiName("java:jboss/exported/queue/QueueA");
-		form.setMessageInBytes(readFile("test/stream_message.json"));
-		
+		form.setMessageInBytes(readFile("stream_message.json"));
+
 		handler.send(form);
 	}
-	
+
 	@Test
-	@Ignore
+	//@Ignore
 	public void testBytesMessage() throws Exception {
 		JmsSendHandlerImpl handler = new JmsSendHandlerImpl();
 
@@ -79,12 +98,13 @@ public class TestJmsSendHandler {
 		form.setMessageInputType("FILE");
 		form.setMessageType("BytesMessage");
 		form.setDestinationJndiName("java:jboss/exported/queue/QueueA");
-		form.setMessageInBytes(readFile("test/bytes_message.json"));
-		
+		form.setMessageInBytes(readFile("bytes_message.json"));
+
 		handler.send(form);
 	}
-	
+
 	@Test
+	//@Ignore
 	public void testObjectMessage() throws Exception {
 		JmsSendHandlerImpl handler = new JmsSendHandlerImpl();
 
@@ -93,22 +113,12 @@ public class TestJmsSendHandler {
 		form.setMessageType("ObjectMessage");
 		form.setDestinationJndiName("java:jboss/exported/queue/QueueA");
 		form.setFullyQualClassName("com.cduvvuri.hqutam.vo.SampleDto");
-		form.setMessageInBytes(readFile("test/object_message.json"));
+		form.setMessageInBytes(readFile("object_message.json"));
 		handler.send(form);
 	}
-	
+
 	public byte[] readFile(String fileName) throws Exception {
-		FileInputStream fis = null;
-		byte[] bytes = null;
-		try {
-			File file = new File(fileName);
-			fis = new FileInputStream(file);
-			bytes = new byte[(int)file.length()];
-			fis.read(new byte[(int)file.length()]);
-			fis.close();
-		} finally {
-			
-		}
-		return bytes;
+		return Files.readAllBytes(Paths.get(TestJmsSendHandler.class
+				.getClassLoader().getResource(fileName).toURI()));
 	}
 }
